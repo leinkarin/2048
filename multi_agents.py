@@ -120,8 +120,8 @@ class MinmaxAgent(MultiAgentSearchAgent):
             Returns the successor game state after an agent takes an action
         """
         """*** YOUR CODE HERE ***"""
-        action, score = self.minimax(game_state, self.depth, 0)
-        print(score)
+        action, score = self.minimax(game_state, self.depth * 2, 0)  # depth*2 because we want a full cycle of
+        # max and min
         return action
 
     def minimax(self, game_state, depth, agent_index):
@@ -136,7 +136,7 @@ class MinmaxAgent(MultiAgentSearchAgent):
             best_action = Action.STOP
             for action in legal_actions:
                 successor = game_state.generate_successor(agent_index, action)
-                prev_action, prev_score = self.minimax(successor, depth, 1)  # depth - 1????
+                prev_action, prev_score = self.minimax(successor, depth - 1, 1)  # depth - 1????
                 if prev_score > best_score:
                     best_score = prev_score
                     best_action = action
@@ -164,8 +164,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         """*** YOUR CODE HERE ***"""
-        action, score = self.alphabeta(game_state, self.depth, float('-inf'), float('inf'), 0)
-        print(score)
+        action, score = self.alphabeta(game_state, self.depth * 2, float('-inf'), float('inf'), 0)
         return action
 
     def alphabeta(self, game_state, depth, alpha, beta, agent_index):
@@ -179,11 +178,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             best_action = Action.STOP
             for action in legal_actions:
                 successor = game_state.generate_successor(agent_index, action)
-                prev_action, prev_score = self.alphabeta(successor, depth - 1, alpha, beta, 1)
-                if prev_score > best_score:
-                    best_score = prev_score
+                _, score = self.alphabeta(successor, depth - 1, alpha, beta, 1)
+                if score > best_score:
+                    best_score = score
                     best_action = action
-                alpha = max(alpha, prev_score)
+                alpha = max(alpha, score)
                 if beta <= alpha:
                     break  # beta cut-off
             return best_action, best_score
@@ -193,11 +192,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             best_action = Action.STOP
             for action in legal_actions:
                 successor = game_state.generate_successor(agent_index, action)
-                prev_action, prev_score = self.alphabeta(successor, depth, alpha, beta, 0)  # depth - 1????
-                if prev_score < best_score:
-                    best_score = prev_score
+                _, score = self.alphabeta(successor, depth - 1, alpha, beta, 0)  # depth - 1????
+                if score < best_score:
+                    best_score = score
                     best_action = action
-                beta = min(beta, prev_score)
+                beta = min(beta, score)
                 if beta <= alpha:
                     break  # alpha cut-off
             return best_action, best_score
@@ -216,7 +215,36 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         """*** YOUR CODE HERE ***"""
-        util.raiseNotDefined()
+
+        action, score = self.expectimax(game_state, self.depth * 2, 0)  # depth*2 because we want a full cycle of
+        # max and chances
+        return action
+
+    def expectimax(self, game_state, depth, agent_index):
+        if depth == 0 or game_state.done:
+            return Action.STOP, self.evaluation_function(game_state)
+
+        legal_actions = game_state.get_legal_actions(agent_index)
+
+        if agent_index == 0:  # max
+            best_score = float('-inf')
+            best_action = Action.STOP
+            for action in legal_actions:
+                successor = game_state.generate_successor(agent_index, action)
+                _, score = self.expectimax(successor, depth - 1, 1)
+                if score > best_score:
+                    best_score = score
+                    best_action = action
+            return best_action, best_score
+
+        else:  # expect
+            expected_value = 0
+            probability = 1 / len(legal_actions)
+            for action in legal_actions:
+                successor = game_state.generate_successor(agent_index, action)
+                _, score = self.expectimax(successor, depth - 1, 0)
+                expected_value += score * probability
+            return Action.STOP, expected_value
 
 
 def better_evaluation_function(current_game_state):
