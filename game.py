@@ -12,7 +12,6 @@ class Action(Enum):
     LEFT = 3
     RIGHT = 4
     STOP = 5
-    HI = 6
 
 
 OpponentAction = namedtuple('OpponentAction', ['row', 'column', 'value'])
